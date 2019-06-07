@@ -21,10 +21,6 @@ object MoviePresenterTest : Spek( {
             it("should show correct name and year") {
                 presenter.title `should be equal to` "Fight Club (1999)"
             }
-
-            it("should be the correct category") {
-                presenter.category `should be equal to` "Best movie"
-            }
         }
     }
 })

@@ -3,14 +3,15 @@ package com.vitorprado.wptest
 import com.vitorprado.wptest.actions.GetMovies
 import com.vitorprado.wptest.values.Category
 import com.vitorprado.wptest.values.Movie
-import io.reactivex.android.schedulers.AndroidSchedulers.mainThread
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.schedulers.Schedulers.io
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MoviesPresenter(
     private val contract: MoviesContract,
     private val getMovies: GetMovies = GetMovies()
-) {
+) : ScopedPresenter() {
 
     private val compositeDisposable by lazy { CompositeDisposable() }
     private var moviesList: List<Movie>? = null
@@ -19,21 +20,12 @@ class MoviesPresenter(
         fetchMovies()
     }
 
-    private fun fetchMovies() {
-        getMovies.execute()
-            .subscribe(
-                {
-                    moviesList = it
-                    with(contract) {
-                        setupList(it)
-                        setupCategories(getCategories(it))
-                    }
-                },
-                { /* we will ignore errors */ }
-            )
-            .also {
-                compositeDisposable.add(it)
-            }
+    private fun fetchMovies() = launch {
+        withContext(Dispatchers.IO) { getMovies.execute().get() }.also { with(contract) {
+            moviesList = it
+            setupList(it)
+            setupCategories(getCategories(it))
+        }}
     }
 
     fun filterMoviesByCategory(category: Category) {
